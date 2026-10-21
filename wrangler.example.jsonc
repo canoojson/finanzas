@@ -1,0 +1,37 @@
+// Plantilla de configuración. Cópiala a wrangler.jsonc (que no se sube al repo) y rellena tus datos:
+//   cp wrangler.example.jsonc wrangler.jsonc
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "finanzas",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-12",
+  "compatibility_flags": ["nodejs_compat"],
+  // Chrome en Cloudflare para convertir los informes mensuales a PDF.
+  "browser": { "binding": "BROWSER", "remote": true },
+  "observability": { "enabled": true },
+  // Solo en el dominio propio (protegido por Access); sin URL de workers.dev ni previews.
+  "routes": [{ "pattern": "finanzas.tudominio.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    // database_id: el que devuelve `npx wrangler d1 create finanzas`.
+    { "binding": "DB", "database_name": "finanzas", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+  ],
+  // Cada hora: apunta recurrentes y cuotas vencidas y envía los recordatorios que tocan.
+  "triggers": { "crons": ["0 * * * *"] },
+  "vars": {
+    // Zero Trust → Ajustes → Dominio del equipo.
+    "TEAM_DOMAIN": "https://<tu-equipo>.cloudflareaccess.com",
+    // Zero Trust → Access → Aplicaciones → tu aplicación → «Etiqueta de audiencia de la aplicación» (AUD).
+    "POLICY_AUD": "<aud-de-la-aplicacion>",
+    // Lista blanca separada por comas (segunda barrera además de la política de Access).
+    "ALLOWED_EMAILS": "tu@email.com",
+    // Web Push: clave pública VAPID (la privada es el secreto VAPID_PRIVATE_JWK).
+    "VAPID_PUBLIC_KEY": "<clave-publica-vapid>",
+    "VAPID_SUBJECT": "mailto:tu@email.com"
+  }
+}

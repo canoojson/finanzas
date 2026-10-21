@@ -1,0 +1,10 @@
+node_modules
+dist
+.wrangler
+.dev.vars*
+!.dev.vars.example
+muestras/
+# Configuración de despliegue propia (dominio, Access, correos): se parte de wrangler.example.jsonc
+wrangler.jsonc
+# Imágenes de Chiikawa (© Nagano / San-X): solo en local, no se redistribuyen
+public/chiikawa/

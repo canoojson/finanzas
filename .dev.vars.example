@@ -1,0 +1,2 @@
+# Solo desarrollo local: simula el usuario autenticado por Cloudflare Access.
+DEV_EMAIL=tu@email.com

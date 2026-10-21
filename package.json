@@ -1,0 +1,31 @@
+{
+  "name": "finanzas",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc",
+    "deploy": "vite build && wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply finanzas --local",
+    "db:migrate:remote": "wrangler d1 migrations apply finanzas --remote"
+  },
+  "type": "module",
+  "dependencies": {
+    "@cloudflare/puppeteer": "^1.4.0",
+    "@pushforge/builder": "^2.0.5",
+    "hono": "^4.13.13",
+    "jose": "^6.2.12",
+    "preact": "^11.0.1"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.63.1",
+    "@cloudflare/workers-types": "^5.20261012.1",
+    "@preact/preset-vite": "^2.10.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "wrangler": "^4.149.0"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "private": true
+}
