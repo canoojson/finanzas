@@ -2,9 +2,10 @@ import { render } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import { api, sessionExpired, type Boot } from './api';
 import { Deco, Icon } from './components';
+import { applyStyle, cachedStyle } from './estilos';
 import { applySkin } from './skin';
 import { StoreCtx, type Store } from './store';
-import { Tour } from './Tour';
+import { NEWS_VERSION, Tour, type TourMode } from './Tour';
 import './styles.css';
 import { Ahorro } from './views/Ahorro';
 import { Ajustes } from './views/Ajustes';
@@ -29,6 +30,8 @@ const tabFromHash = (): Tab => {
   return (TABS.find(([t]) => t === h)?.[0] ?? 'resumen') as Tab;
 };
 
+applyStyle(cachedStyle()); // antes del primer pintado, para que no parpadee
+
 function App() {
   const [boot, setBoot] = useState<Boot | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,12 +39,14 @@ function App() {
   const [tab, setTab] = useState<Tab>(tabFromHash);
   const [month, setMonth] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [touring, setTouring] = useState(false);
+  const [touring, setTouring] = useState<TourMode | null>(null);
 
   const reload = useCallback(async () => {
     const b = await api.get<Boot>('/bootstrap');
     setBoot((prev) => {
-      if (!prev && !b.user.tour_done) setTouring(true); // primer login: tour de bienvenida
+      // Primer login: tour completo. Si ya lo vio pero hay novedades, solo las novedades.
+      if (!prev && !b.user.tour_done) setTouring('completo');
+      else if (!prev && b.user.news_seen < NEWS_VERSION) setTouring('novedades');
       return b;
     });
     setMonth((m) => m ?? b.today.slice(0, 7));
@@ -76,6 +81,10 @@ function App() {
   const skin = boot?.user.skin ?? 'clasica';
   const skinColors = boot?.user.skin_colors ?? null;
   useEffect(() => applySkin(skin, skinColors), [skin, skinColors]);
+  const style = boot?.user.style;
+  useEffect(() => {
+    if (style) applyStyle(style);
+  }, [style]);
 
   const store = useMemo<Store | null>(() => {
     if (!boot) return null;
@@ -85,7 +94,7 @@ function App() {
       boot,
       reload,
       toast: setToastMsg,
-      startTour: () => setTouring(true),
+      startTour: () => setTouring('completo'),
       account: (id) => (id == null ? undefined : accounts.get(id)),
       category: (id) => (id == null ? undefined : categories.get(id)),
     };
@@ -150,7 +159,7 @@ function App() {
           <span>Ajustes</span>
         </button>
       </nav>
-      {touring && <Tour onClose={() => setTouring(false)} />}
+      {touring && <Tour mode={touring} onClose={() => setTouring(null)} />}
       {toastMsg && (
         <div class="toast" role="status">
           {toastMsg}

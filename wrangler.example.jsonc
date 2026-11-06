@@ -36,6 +36,8 @@
     // Avisos cuando el uso diario del plan gratuito se acerca al límite (solo a este correo).
     // Requiere además el secreto CF_ANALYTICS_TOKEN (token de API con «Account Analytics: Read»).
     "ADMIN_EMAIL": "tu@email.com",
+    // Correos (separados por comas) que pueden elegir la estética Chiikawa. Vacío = nadie.
+    "CHIIKAWA_EMAILS": "",
     // Panel de Cloudflare → Workers → «ID de cuenta» (o `npx wrangler whoami`).
     "CF_ACCOUNT_ID": "<id-de-tu-cuenta>"
   }

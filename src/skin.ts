@@ -11,6 +11,34 @@ function luminance(hex: string) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
+/** Contraste WCAG entre dos colores #rrggbb (1 a 21). */
+function contrast(a: string, b: string) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** Convierte cualquier color CSS calculado (rgb(), color(srgb …)) a #rrggbb. */
+function toHex(css: string) {
+  const n = css.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0];
+  const rgb = css.startsWith('color(') ? n.slice(0, 3).map((v) => v * 255) : n.slice(0, 3);
+  return '#' + rgb.map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, '0')).join('');
+}
+
+/** Colores que se están viendo ahora (principal, tarjetas y letra), como «#p,#s,#l»,
+ *  para que Personalizada parta del aspecto que había. */
+export function currentColors() {
+  const probe = document.createElement('i');
+  probe.style.display = 'none';
+  document.body.appendChild(probe);
+  const read = (v: string) => {
+    probe.style.color = `var(${v})`;
+    return toHex(getComputedStyle(probe).color);
+  };
+  const out = ['--accent', '--surface', '--text'].map(read).join(',');
+  probe.remove();
+  return out;
+}
+
 /** Aplica la estética al documento: atributo para el CSS, colores propios y color de la barra del sistema. */
 export function applySkin(skin: Skin, colors: string | null) {
   const root = document.documentElement;
@@ -20,9 +48,11 @@ export function applySkin(skin: Skin, colors: string | null) {
     root.style.setProperty('--c-primary', primary);
     root.style.setProperty('--c-secondary', secondary);
     root.style.setProperty('--c-text', text);
+    // Texto sobre el color principal: la letra elegida si se lee bien; si no, blanco o negro.
+    root.style.setProperty('--c-on-primary', contrast(text, primary) >= 4.5 ? text : contrast('#ffffff', primary) >= 3 ? '#ffffff' : '#000000');
     root.dataset.skinTone = luminance(secondary) < 0.3 ? 'dark' : 'light';
   } else {
-    ['--c-primary', '--c-secondary', '--c-text'].forEach((p) => root.style.removeProperty(p));
+    ['--c-primary', '--c-secondary', '--c-text', '--c-on-primary'].forEach((p) => root.style.removeProperty(p));
     delete root.dataset.skinTone;
   }
   const bar = skin === 'chiikawa' ? '#fde3ec' : skin === 'personalizada' ? primary : null;

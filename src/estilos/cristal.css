@@ -1,0 +1,270 @@
+/* Cristal — estética de iOS (Liquid Glass): colores del sistema de Apple, tarjetas y
+   barras de vidrio translúcido con desenfoque y brillo en el borde, fondo con manchas
+   de color suaves para que el cristal se note, controles en cápsula y barra de
+   pestañas flotante. */
+
+/* Paleta de la Clásica (clara) — colores de sistema de iOS */
+:root:not([data-skin='chiikawa'], [data-skin='personalizada']) {
+  --bg: #f2f2f7;
+  --surface: #ffffff;
+  --surface-2: #e9e9ef;
+  --text: #000000;
+  --muted: #86868b;
+  --line: #d9d9de;
+  --accent: #007aff;
+  --accent-soft: #e0edff;
+  --accent-ink: #007aff;
+  --on-accent: #ffffff;
+  --pos: #24a148;
+  --neg: #ff3b30;
+  --warn: #c96f00;
+  --shadow: 0 10px 30px -14px rgb(0 0 0 / 0.18);
+  --mesh-1: rgb(0 122 255 / 0.2);
+  --mesh-2: rgb(175 82 222 / 0.16);
+  --mesh-3: rgb(48 176 199 / 0.18);
+}
+/* Paleta de la Clásica (oscura) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light'], [data-skin='chiikawa'], [data-skin='personalizada']) {
+    --bg: #000000;
+    --surface: #1c1c1e;
+    --surface-2: #2c2c2e;
+    --text: #ffffff;
+    --muted: #98989f;
+    --line: #38383a;
+    --accent: #0a84ff;
+    --accent-soft: #0a2a52;
+    --accent-ink: #409cff;
+    --on-accent: #ffffff;
+    --pos: #30d158;
+    --neg: #ff453a;
+    --warn: #ff9f0a;
+    --shadow: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+    --mesh-1: rgb(10 132 255 / 0.28);
+    --mesh-2: rgb(191 90 242 / 0.2);
+    --mesh-3: rgb(64 200 224 / 0.16);
+    --glass-edge: rgb(255 255 255 / 0.12);
+    --glass-shine: rgb(255 255 255 / 0.14);
+  }
+}
+
+/* Forma y material (todas las estéticas) */
+:root {
+  --radius: 26px;
+  --r-ctl: 999px;
+  --r-field: 14px;
+  --r-btn: 999px;
+  --r-sm: 12px;
+  --r-icon: 11px;
+  --r-sheet: 34px;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro', 'Inter', 'Segoe UI', Roboto, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro', 'Inter', 'Segoe UI', Roboto, sans-serif;
+  --glass: color-mix(in srgb, var(--surface) 62%, transparent);
+  --glass-strong: color-mix(in srgb, var(--surface) 80%, transparent);
+  --glass-blur: blur(26px) saturate(190%);
+  --glass-edge: rgb(255 255 255 / 0.65);
+  --glass-shine: rgb(255 255 255 / 0.85);
+  --mesh-1: color-mix(in srgb, var(--accent) 22%, transparent);
+  --mesh-2: color-mix(in srgb, var(--accent) 12%, transparent);
+  --mesh-3: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+:root[data-skin-tone='dark'] {
+  --glass-edge: rgb(255 255 255 / 0.12);
+  --glass-shine: rgb(255 255 255 / 0.14);
+}
+
+/* Fondo con color para que el cristal tenga algo que desenfocar
+   (Chiikawa conserva su propio fondo) */
+body {
+  background:
+    radial-gradient(60% 45% at 0% 0%, var(--mesh-1), transparent 70%),
+    radial-gradient(55% 40% at 100% 35%, var(--mesh-2), transparent 70%),
+    radial-gradient(60% 45% at 20% 100%, var(--mesh-3), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Material de cristal: el desenfoque va en una capa ::before para no romper las
+   hojas modales (position: fixed) que algunas tarjetas llevan dentro. */
+.card {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-shine), var(--shadow);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+:root[data-skin='chiikawa'] .card {
+  border-color: var(--line);
+}
+
+.month-switch,
+.search,
+.toast,
+.fab,
+.tabbar,
+.sheet {
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-shine), var(--shadow);
+}
+.month-switch,
+.search {
+  background: var(--glass);
+}
+
+/* Tipografía al estilo iOS: título grande y cabeceras «headline» */
+.top h1 {
+  font-size: 2.125rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.card-head h2,
+.subhead {
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-size: 1.06rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.hero > .stat .stat-value {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.tx-icon {
+  background: color-mix(in srgb, var(--chip) 18%, transparent);
+}
+.rows > li + li {
+  border-top-color: color-mix(in srgb, var(--line) 75%, transparent);
+}
+
+/* Controles en cápsula */
+.chip,
+.chip-select {
+  background: var(--glass);
+  border-color: var(--glass-edge);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+.chip.on {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+.segmented {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+  border-radius: 999px;
+}
+.segmented button {
+  border-radius: 999px;
+}
+.segmented button.on {
+  background: var(--glass-strong);
+  box-shadow: inset 0 1px 0 var(--glass-shine), 0 3px 10px -2px rgb(0 0 0 / 0.15);
+}
+.month-switch .icon-btn {
+  border-radius: 999px;
+}
+
+.btn.primary {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 6px 18px -8px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+.btn.ghost {
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+
+.field input,
+.field select,
+.field textarea {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+}
+
+/* Botón flotante: cristal teñido del color principal */
+.fab {
+  background: color-mix(in srgb, var(--accent) 88%, transparent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 10px 26px -6px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.toast {
+  background: var(--glass-strong);
+  color: var(--text);
+  border-radius: 999px;
+}
+
+/* Hoja modal de cristal con asa */
+.sheet-backdrop {
+  background: rgb(0 0 0 / 0.25);
+}
+.sheet {
+  position: relative;
+  background: var(--glass-strong);
+  border-bottom: 0;
+}
+.sheet::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 36px;
+  height: 5px;
+  margin-left: -18px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text) 22%, transparent);
+}
+
+.progress {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+/* Barra de pestañas flotante en cápsula (móvil), con la activa en una «lente» */
+@media (max-width: 959px) {
+  .tabbar {
+    left: 14px;
+    right: 14px;
+    bottom: calc(env(safe-area-inset-bottom) + 6px);
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--glass);
+  }
+  .tabbar button {
+    height: calc(var(--tabbar-h) - 6px);
+    border-radius: 999px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .tabbar button.on {
+    background: color-mix(in srgb, var(--text) 9%, transparent);
+    font-weight: 600;
+  }
+  .fab {
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 22px);
+  }
+}
+@media (min-width: 960px) {
+  .tabbar {
+    background: var(--glass);
+    border-width: 0 1px 0 0;
+    box-shadow: none;
+  }
+  .tabbar button {
+    border-radius: 999px;
+  }
+}

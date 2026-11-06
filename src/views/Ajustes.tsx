@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { api, type Category, type Recurring, type Skin } from '../api';
+import { api, type Category, type Recurring, type Skin, type Style } from '../api';
 import { Card, Empty, Field, Header, inputValue, Money } from '../components';
 import { CategoryForm, RecurringForm } from '../forms/others';
-import { applySkin, DEFAULT_COLORS } from '../skin';
+import { applyStyle, STYLE_INFO, STYLES } from '../estilos';
+import { applySkin, currentColors, DEFAULT_COLORS } from '../skin';
 import { useStore } from '../store';
 import { ExportarIA } from './ExportarIA';
 import { Informes } from './Informes';
@@ -142,17 +143,12 @@ function Estetica() {
   const { boot, reload, toast } = useStore();
   const saved = boot.user.skin_colors ?? DEFAULT_COLORS;
   const [colors, setColors] = useState(saved.split(','));
-  const dirty = colors.join(',') !== saved;
-  const savedRef = useRef(boot.user);
-  savedRef.current = boot.user;
+  const lastSent = useRef(saved); // últimos colores enviados, para no repetir guardados
+  const pending = useRef<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Vista previa en vivo; al salir de Ajustes sin guardar, vuelve a lo guardado.
-  useEffect(() => {
-    if (boot.user.skin === 'personalizada') applySkin('personalizada', colors.join(','));
-  }, [colors, boot.user.skin]);
-  useEffect(() => () => applySkin(savedRef.current.skin, savedRef.current.skin_colors), []);
-
-  const save = async (data: { skin?: Skin; skin_colors?: string }, msg?: string) => {
+  const save = async (data: { skin?: Skin; skin_colors?: string; style?: Style }, msg?: string) => {
+    if (data.skin_colors) lastSent.current = data.skin_colors;
     try {
       await api.put('/me', data);
       await reload();
@@ -162,14 +158,69 @@ function Estetica() {
     }
   };
 
-  const pick = (skin: Skin) =>
-    // La primera vez que se elige Personalizada se guardan también los colores de partida.
-    save(skin === 'personalizada' && !boot.user.skin_colors ? { skin, skin_colors: colors.join(',') } : { skin });
+  // Los colores se guardan solos: al dejar de tocarlos, al salir de Ajustes o al cambiar de app.
+  const flush = () => {
+    clearTimeout(timer.current);
+    const c = pending.current;
+    pending.current = null;
+    if (c && c !== lastSent.current) save({ skin_colors: c });
+  };
+  const flushRef = useRef(flush);
+  flushRef.current = flush;
+
+  useEffect(() => {
+    if (boot.user.skin !== 'personalizada') return;
+    const c = colors.join(',');
+    applySkin('personalizada', c); // vista previa en vivo
+    if (c === lastSent.current) return;
+    pending.current = c;
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => flushRef.current(), 600);
+  }, [colors, boot.user.skin]);
+
+  useEffect(() => {
+    const onHide = () => document.visibilityState === 'hidden' && flushRef.current();
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      flushRef.current();
+    };
+  }, []);
+
+  const pickStyle = (style: Style) => {
+    if (boot.user.skin !== 'personalizada') return save({ style });
+    // En Personalizada, los colores pasan a ser los del nuevo estilo: se mira un momento
+    // cómo queda en Clásica para leerlos y se vuelve a Personalizada con ellos.
+    applyStyle(style);
+    applySkin('clasica', null);
+    const start = currentColors();
+    applySkin('personalizada', start);
+    setColors(start.split(','));
+    return save({ style, skin_colors: start });
+  };
+
+  const pick = (skin: Skin) => {
+    if (skin !== 'personalizada' || boot.user.skin === 'personalizada') return save({ skin });
+    // Al pasar a Personalizada se parte de los colores que se estaban viendo.
+    const start = currentColors();
+    setColors(start.split(','));
+    return save({ skin, skin_colors: start });
+  };
 
   return (
-    <Card title="Estética">
+    <Card title="Estética" tour="estetica">
+      <p class="field-label">Estilo</p>
+      <div class="chips style-chips">
+        {STYLES.map((id) => (
+          <button class={`chip${boot.user.style === id ? ' on' : ''}`} onClick={() => pickStyle(id)}>
+            {STYLE_INFO[id][0]}
+          </button>
+        ))}
+      </div>
+      <p class="muted small style-desc">{STYLE_INFO[boot.user.style]?.[1]}</p>
+      <p class="field-label">Colores</p>
       <div class="segmented">
-        {SKINS.map(([id, label]) => (
+        {SKINS.filter(([id]) => id !== 'chiikawa' || boot.user.chiikawa).map(([id, label]) => (
           <button class={boot.user.skin === id ? 'on' : ''} onClick={() => pick(id)}>
             {label}
           </button>
@@ -193,17 +244,7 @@ function Estetica() {
               </label>
             ))}
           </div>
-          {dirty && (
-            <div class="color-actions">
-              <button class="btn ghost" onClick={() => setColors(saved.split(','))}>
-                Deshacer
-              </button>
-              <button class="btn primary" onClick={() => save({ skin_colors: colors.join(',') }, 'Colores guardados')}>
-                Guardar
-              </button>
-            </div>
-          )}
-          <p class="muted small">Principal: botones y fondo. Secundario: tarjetas. Letra: el texto.</p>
+          <p class="muted small">Principal: botones y detalles. Secundario: tarjetas y fondo. Letra: el texto. Se guardan solos.</p>
         </>
       )}
     </Card>

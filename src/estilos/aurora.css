@@ -1,0 +1,147 @@
+/* Aurora — fintech moderna: violeta eléctrico, tarjetas muy redondeadas con sombra
+   difusa, resumen con un brillo de color y pestaña activa en «pastilla». */
+
+/* Paleta de la Clásica (clara) */
+:root:not([data-skin='chiikawa'], [data-skin='personalizada']) {
+  --bg: #f3f4fb;
+  --surface: #ffffff;
+  --surface-2: #f0f1f9;
+  --text: #12131a;
+  --muted: #6a6f85;
+  --line: #e6e8f2;
+  --accent: #5b4cf0;
+  --accent-soft: #ecebfe;
+  --accent-ink: #4a3be0;
+  --on-accent: #fff;
+  --pos: #12a150;
+  --neg: #e5484d;
+  --warn: #d97706;
+  --shadow: 0 1px 2px rgb(30 30 80 / 0.04), 0 10px 28px -12px rgb(40 40 110 / 0.16);
+}
+/* Paleta de la Clásica (oscura) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light'], [data-skin='chiikawa'], [data-skin='personalizada']) {
+    --bg: #0b0b14;
+    --surface: #15151f;
+    --surface-2: #1f1f2c;
+    --text: #eeeef6;
+    --muted: #9a9cb5;
+    --line: #282838;
+    --accent: #8f86ff;
+    --accent-soft: #25224d;
+    --accent-ink: #aaa3ff;
+    --on-accent: #fff;
+    --pos: #3dd68c;
+    --neg: #ff6b70;
+    --warn: #f0a94b;
+    --shadow: 0 0 0 1px rgb(255 255 255 / 0.03);
+  }
+}
+
+/* Forma (todas las estéticas) */
+:root {
+  --radius: 22px;
+  --r-ctl: 14px;
+  --r-field: 14px;
+  --r-btn: 14px;
+  --r-sm: 12px;
+  --r-icon: 14px;
+  --r-sheet: 26px;
+}
+
+.top h1 {
+  font-size: 2rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+.card {
+  padding: 18px;
+}
+.card-head h2 {
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-size: 0.98rem;
+  font-weight: 650;
+  color: var(--text);
+}
+.subhead {
+  text-transform: none;
+  letter-spacing: -0.01em;
+  font-size: 0.98rem;
+  color: var(--text);
+}
+
+/* Resumen con brillo del color principal */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(110% 130% at 100% 0%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 62%),
+    radial-gradient(80% 100% at 0% 100%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+    var(--surface);
+}
+.hero > .stat .stat-value {
+  font-size: 2.3rem;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.tx-icon {
+  background: color-mix(in srgb, var(--chip) 14%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip) 18%, transparent);
+}
+.tx-title {
+  font-weight: 600;
+}
+
+.month-switch,
+.search {
+  box-shadow: var(--shadow);
+}
+
+.chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.btn.primary,
+.fab {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 82%, white), var(--accent) 55%);
+  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+.fab {
+  border-radius: 20px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  background: var(--surface);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.progress {
+  height: 10px;
+}
+.progress > div {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 65%, white), var(--accent));
+}
+
+/* Barra de pestañas (móvil): la activa lleva una pastilla detrás del icono */
+@media (max-width: 959px) {
+  .tabbar button.on svg {
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 3px 16px;
+    box-sizing: content-box;
+  }
+  .tabbar button.on {
+    font-weight: 700;
+  }
+}

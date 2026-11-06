@@ -12,6 +12,7 @@ export interface Env {
   VAPID_PRIVATE_JWK: string; // secreto
   BROWSER: Fetcher; // Browser Rendering (PDF de los informes)
   // Avisos de uso del plan gratuito (opcionales; sin ellos no se vigila nada).
+  CHIIKAWA_EMAILS?: string; // correos que pueden elegir la estética Chiikawa, separados por comas
   ADMIN_EMAIL: string; // único usuario que recibe los avisos y ve el uso
   CF_ACCOUNT_ID: string;
   CF_ANALYTICS_TOKEN: string; // secreto: token de API con permiso «Account Analytics: Read»

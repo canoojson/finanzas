@@ -1,0 +1,148 @@
+/* Editorial — cálido, como papel: tonos crema, terracota, títulos y cifras con
+   tipografía serif, versalitas en las cabeceras y separadores punteados. */
+
+/* Paleta de la Clásica (clara) */
+:root:not([data-skin='chiikawa'], [data-skin='personalizada']) {
+  --bg: #f4efe6;
+  --surface: #fffcf6;
+  --surface-2: #f1eadd;
+  --text: #2a241e;
+  --muted: #7d7165;
+  --line: #e6dccb;
+  --accent: #b4532a;
+  --accent-soft: #f5e1d4;
+  --accent-ink: #a14522;
+  --on-accent: #fffaf3;
+  --pos: #3b7a4b;
+  --neg: #b5392f;
+  --warn: #a76a10;
+  --shadow: 0 1px 0 rgb(80 50 20 / 0.04), 0 14px 30px -22px rgb(80 50 20 / 0.35);
+}
+/* Paleta de la Clásica (oscura) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light'], [data-skin='chiikawa'], [data-skin='personalizada']) {
+    --bg: #16130f;
+    --surface: #201c16;
+    --surface-2: #2a251e;
+    --text: #efe7da;
+    --muted: #a99c8a;
+    --line: #362f26;
+    --accent: #e08a5e;
+    --accent-soft: #3b2a1f;
+    --accent-ink: #eb9d74;
+    --on-accent: #1d120b;
+    --pos: #86c595;
+    --neg: #e8806f;
+    --warn: #dcaa58;
+    --shadow: none;
+  }
+}
+
+/* Forma (todas las estéticas) */
+:root {
+  --radius: 14px;
+  --r-ctl: 10px;
+  --r-field: 10px;
+  --r-btn: 10px;
+  --r-sm: 8px;
+  --r-icon: 50%;
+  --r-sheet: 18px;
+  --font-display: ui-serif, 'New York', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+}
+
+.top h1 {
+  font-size: 2.1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.card {
+  border: 1px solid var(--line);
+}
+.card-head h2,
+.subhead {
+  font-family: var(--font-display);
+  font-variant: small-caps;
+  text-transform: lowercase;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.card-head {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.hero > .stat .stat-value {
+  font-size: 2.35rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.hero .stat-value,
+.donut-center strong,
+.loan-head strong {
+  font-family: var(--font-display);
+}
+
+.rows > li + li,
+.goals li + li {
+  border-top-style: dashed;
+}
+.tx-icon {
+  background: color-mix(in srgb, var(--chip) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--chip) 30%, transparent);
+}
+.day-head {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+
+.chip.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.month-switch,
+.search {
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.btn {
+  letter-spacing: 0.01em;
+}
+.btn.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.field input,
+.field select,
+.field textarea {
+  background: var(--surface);
+}
+
+.fab {
+  box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.progress {
+  height: 6px;
+}
+
+.tabbar {
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+}
+.tabbar button {
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+}
+@media (max-width: 959px) {
+  .tabbar button.on {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+}

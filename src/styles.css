@@ -13,7 +13,15 @@
   --neg: #d63c3c;
   --warn: #c27c0e;
   --shadow: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.06);
-  --radius: 16px;
+  --radius: 16px; /* tarjetas */
+  --r-ctl: 12px; /* buscador, selector de mes, segmentados, avisos */
+  --r-field: 12px; /* campos de formulario */
+  --r-btn: 12px; /* botones */
+  --r-sm: 10px; /* botones de icono, notas, chips de día */
+  --r-icon: 12px; /* icono de cada movimiento */
+  --r-sheet: 20px; /* hojas modales y tarjeta del tour */
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, sans-serif;
+  --font-display: var(--font); /* títulos y cifras grandes */
   --tabbar-h: 62px;
   color-scheme: light;
 }
@@ -60,7 +68,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 16px/1.4 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, sans-serif;
+  font: 16px/1.4 var(--font);
   font-variant-numeric: tabular-nums;
   min-height: 100dvh;
 }
@@ -85,6 +93,14 @@ h1,
 h2,
 h3 {
   margin: 0;
+}
+.top h1,
+.sheet-head h2,
+.tour-card h2,
+.side-brand,
+.hero > .stat .stat-value,
+.amount-input input {
+  font-family: var(--font-display);
 }
 
 .pos {
@@ -133,7 +149,7 @@ h3 {
   align-items: center;
   justify-content: space-between;
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: var(--r-ctl);
   padding: 4px;
   box-shadow: var(--shadow);
 }
@@ -146,7 +162,7 @@ h3 {
   place-items: center;
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   color: var(--muted);
 }
 .icon-btn:active {
@@ -271,7 +287,7 @@ h3 {
   place-items: center;
   width: 38px;
   height: 38px;
-  border-radius: 12px;
+  border-radius: var(--r-icon);
   font-size: 1.15rem;
   background: color-mix(in srgb, var(--chip) 16%, transparent);
   color: var(--chip);
@@ -341,7 +357,7 @@ h3 {
   align-items: center;
   gap: 8px;
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: var(--r-ctl);
   padding: 0 12px;
   color: var(--muted);
   box-shadow: var(--shadow);
@@ -594,7 +610,7 @@ h3 {
 .notes {
   white-space: pre-wrap;
   background: var(--surface-2);
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   padding: 10px 12px;
   font-size: 0.9rem;
 }
@@ -630,7 +646,7 @@ form {
   max-width: 100%;
   border: 1px solid var(--line);
   background: var(--surface-2);
-  border-radius: 12px;
+  border-radius: var(--r-field);
   padding: 11px 12px;
   font-size: 16px; /* evita el zoom automático de iOS */
   outline: none;
@@ -709,7 +725,7 @@ form {
 .segmented {
   display: flex;
   background: var(--surface-2);
-  border-radius: 12px;
+  border-radius: var(--r-ctl);
   padding: 3px;
 }
 .segmented.small {
@@ -719,7 +735,7 @@ form {
   flex: 1;
   text-align: center;
   padding: 8px 6px;
-  border-radius: 9px;
+  border-radius: calc(var(--r-ctl) - 3px);
   font-weight: 550;
   color: var(--muted);
 }
@@ -804,7 +820,7 @@ form {
   justify-content: center;
   min-height: 46px;
   padding: 0 18px;
-  border-radius: 12px;
+  border-radius: var(--r-btn);
   font-weight: 600;
   text-decoration: none;
   text-align: center;
@@ -858,7 +874,7 @@ form {
   max-width: 640px;
   max-height: 92dvh;
   background: var(--surface);
-  border-radius: 20px 20px 0 0;
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
   display: flex;
   flex-direction: column;
   animation: rise 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -884,7 +900,7 @@ form {
     align-items: center;
   }
   .sheet {
-    border-radius: 20px;
+    border-radius: var(--r-sheet);
   }
 }
 @keyframes rise {
@@ -959,7 +975,7 @@ form {
   background: var(--text);
   color: var(--bg);
   padding: 10px 16px;
-  border-radius: 12px;
+  border-radius: var(--r-ctl);
   font-size: 0.9rem;
   font-weight: 550;
   max-width: calc(100% - 32px);
@@ -1046,7 +1062,7 @@ form {
 .day-chips button {
   flex: 1;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   background: var(--surface-2);
   color: var(--muted);
   font-weight: 600;
@@ -1076,8 +1092,19 @@ form {
   box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.62);
   outline: 2px solid color-mix(in srgb, var(--accent) 80%, white);
   outline-offset: 2px;
-  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
+  --tour-ease: 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: top var(--tour-ease), left var(--tour-ease), width var(--tour-ease), height var(--tour-ease), outline-color 0.2s ease;
   pointer-events: none;
+  animation: fade 0.25s ease;
+}
+/* Paso sin elemento: el hueco es un punto en el centro, sin borde. */
+.tour-spot.centered {
+  outline-color: transparent;
+}
+/* Siguiendo el scroll del usuario: sin retraso. */
+.tour-spot.still,
+.tour-card.still {
+  transition: none;
 }
 .tour-card {
   position: fixed;
@@ -1086,17 +1113,14 @@ form {
   width: min(380px, calc(100vw - 32px));
   background: var(--surface);
   color: var(--text);
-  border-radius: 18px;
+  border-radius: var(--r-sheet);
   padding: 18px;
   box-shadow: 0 12px 40px rgb(0 0 0 / 0.35);
   display: flex;
   flex-direction: column;
   gap: 12px;
   animation: fade 0.2s ease;
-}
-.tour-card.center {
-  top: 50%;
-  transform: translate(-50%, -50%);
+  transition: top 0.45s cubic-bezier(0.32, 0.72, 0, 1);
 }
 .tour-card h2 {
   font-size: 1.15rem;
@@ -1266,16 +1290,17 @@ form {
 /* --- Estética personalizada: colores elegidos por el usuario (--c-*) --------------- */
 
 :root[data-skin='personalizada'] {
-  --bg: color-mix(in srgb, var(--c-primary) 30%, var(--c-secondary));
+  /* Fondo: el secundario un poco más oscuro, con un toque del principal. */
+  --bg: color-mix(in srgb, var(--c-primary) 8%, color-mix(in srgb, var(--c-secondary) 93%, #000));
   --surface: var(--c-secondary);
-  --surface-2: color-mix(in srgb, var(--c-primary) 12%, var(--c-secondary));
+  --surface-2: color-mix(in srgb, var(--c-primary) 8%, color-mix(in srgb, var(--c-text) 5%, var(--c-secondary)));
   --text: var(--c-text);
   --muted: color-mix(in srgb, var(--c-text) 62%, var(--c-secondary));
-  --line: color-mix(in srgb, var(--c-primary) 35%, var(--c-secondary));
+  --line: color-mix(in srgb, var(--c-primary) 12%, color-mix(in srgb, var(--c-text) 12%, var(--c-secondary)));
   --accent: var(--c-primary);
   --accent-soft: color-mix(in srgb, var(--c-primary) 22%, var(--c-secondary));
   --accent-ink: var(--c-text);
-  --on-accent: var(--c-text);
+  --on-accent: var(--c-on-primary, var(--c-text));
   --pos: #198754;
   --neg: #d63c3c;
   --warn: #c27c0e;
@@ -1283,6 +1308,7 @@ form {
   color-scheme: light;
 }
 :root[data-skin='personalizada'][data-skin-tone='dark'] {
+  --bg: color-mix(in srgb, var(--c-primary) 6%, color-mix(in srgb, var(--c-secondary) 65%, #000));
   --pos: #4cc38a;
   --neg: #f07171;
   --warn: #e5a54b;
@@ -1311,7 +1337,7 @@ form {
   height: 46px;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-field);
   background: none;
   cursor: pointer;
 }
@@ -1322,15 +1348,6 @@ form {
   border: 0;
   border-radius: 8px;
 }
-.color-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-.color-actions .btn {
-  flex: 1;
-}
-
 /* --- Resumen para IA y uso de Cloudflare ------------------------------------------ */
 
 .md-preview {
@@ -1402,7 +1419,7 @@ form {
     justify-content: flex-start;
     gap: 12px;
     padding: 0 12px;
-    border-radius: 10px;
+    border-radius: var(--r-sm);
     font-size: 0.95rem;
   }
   .tabbar button:hover {
@@ -1476,4 +1493,17 @@ form {
   .page > .top {
     column-span: all;
   }
+}
+
+/* --- Selector de estilo (Ajustes) ---------------------------------------------- */
+
+.style-chips {
+  margin: 6px 0 8px;
+}
+.style-desc {
+  margin: 0 0 16px;
+}
+.style-desc + .field-label {
+  display: block;
+  margin-bottom: 6px;
 }

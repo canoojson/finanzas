@@ -71,6 +71,7 @@ export interface Hold {
 export type { Loan };
 
 export type Skin = 'clasica' | 'chiikawa' | 'personalizada';
+export type { Style } from '../shared/styles';
 
 export interface Boot {
   today: string;
@@ -82,8 +83,11 @@ export interface Boot {
     reminder_skip_if_logged: number;
     hold_alerts: number;
     tour_done: number;
+    news_seen: number; // última versión de novedades vista (ver NEWS_VERSION en Tour.tsx)
     savings_target: number | null;
     skin: Skin;
+    style: import('../shared/styles').Style;
+    chiikawa: boolean; // puede elegir la estética Chiikawa
     skin_colors: string | null; // «#principal,#secundario,#letra»
     shortcut_enabled: number;
     shortcut_account_id: number | null;

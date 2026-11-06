@@ -11,6 +11,11 @@ import { issueToken, shortcut } from './shortcut';
 import { crud, validate, type AppEnv, type Spec } from './crud';
 import { buildAiExport } from './ai-export';
 import { checkUsage, fetchUsage, isAdmin, LEVELS, usageConfigured } from './usage';
+import { STYLES } from '../shared/styles';
+
+/** La estética Chiikawa solo está disponible para los correos de CHIIKAWA_EMAILS. */
+const canChiikawa = (env: Env, email: string) =>
+  (env.CHIIKAWA_EMAILS ?? '').split(',').some((s) => s.trim().toLowerCase() === email);
 
 const DEFAULT_CATEGORIES: [string, 'gasto' | 'ingreso', string, string][] = [
   ['Supermercado', 'gasto', '🛒', '#4f9d69'],
@@ -424,7 +429,7 @@ app.get('/bootstrap', async (c) => {
   const [user, acc, cats, lns, rec, gls, hlds, devices] = await Promise.all([
     db
       .prepare(
-        `SELECT email, name, reminder_days, reminder_hour, reminder_skip_if_logged, hold_alerts, tour_done, savings_target, skin, skin_colors,
+        `SELECT email, name, reminder_days, reminder_hour, reminder_skip_if_logged, hold_alerts, tour_done, news_seen, savings_target, skin, skin_colors, style,
                 shortcut_token_hash IS NOT NULL AS shortcut_enabled, shortcut_account_id FROM users WHERE email = ?`,
       )
       .bind(owner)
@@ -441,7 +446,13 @@ app.get('/bootstrap', async (c) => {
   ]);
   return c.json({
     today,
-    user: { ...user, is_admin: isAdmin(c.env, owner) },
+    user: {
+      ...user,
+      // Quien no tenga permiso para Chiikawa la ve como Clásica aunque la tuviera guardada.
+      skin: user?.skin === 'chiikawa' && !canChiikawa(c.env, owner) ? 'clasica' : user?.skin,
+      chiikawa: canChiikawa(c.env, owner),
+      is_admin: isAdmin(c.env, owner),
+    },
     accounts: acc.results,
     categories: cats.results,
     loans: lns.results,
@@ -458,6 +469,8 @@ app.put('/me', async (c) => {
     throw new HTTPException(400, { message: 'Días no válidos' });
   if (body.skin_colors != null && !/^#[0-9a-f]{6}(,#[0-9a-f]{6}){2}$/i.test(String(body.skin_colors)))
     throw new HTTPException(400, { message: 'Colores no válidos' });
+  if (body.skin === 'chiikawa' && !canChiikawa(c.env, c.var.email))
+    throw new HTTPException(403, { message: 'Estética no disponible' });
   const data = await validate(
     c.env.DB,
     c.var.email,
@@ -469,9 +482,11 @@ app.put('/me', async (c) => {
       reminder_skip_if_logged: { type: 'bool' },
       hold_alerts: { type: 'bool' },
       tour_done: { type: 'bool' },
+      news_seen: { type: 'int', min: 0 },
       savings_target: { type: 'int', min: 0 },
       skin: { type: 'enum', values: ['clasica', 'chiikawa', 'personalizada'] },
       skin_colors: { type: 'text', max: 23 },
+      style: { type: 'enum', values: [...STYLES] },
       shortcut_account_id: { type: 'ref', table: 'accounts' },
     },
     true,

@@ -1,0 +1,171 @@
+/* Isla — amable y redondeado: verde azulado, botones en pastilla, tarjetas muy
+   suaves y la barra de pestañas flotando como una isla sobre el contenido. */
+
+/* Paleta de la Clásica (clara) */
+:root:not([data-skin='chiikawa'], [data-skin='personalizada']) {
+  --bg: #edf1f5;
+  --surface: #ffffff;
+  --surface-2: #f1f5f8;
+  --text: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --accent: #0d9488;
+  --accent-soft: #d6f3ef;
+  --accent-ink: #0b7d73;
+  --on-accent: #ffffff;
+  --pos: #16a34a;
+  --neg: #e11d48;
+  --warn: #d97706;
+  --shadow: 0 2px 4px rgb(15 23 42 / 0.03), 0 12px 32px -14px rgb(15 23 42 / 0.14);
+}
+/* Paleta de la Clásica (oscura) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light'], [data-skin='chiikawa'], [data-skin='personalizada']) {
+    --bg: #0a111e;
+    --surface: #131c2d;
+    --surface-2: #1b2639;
+    --text: #e7edf6;
+    --muted: #93a1b8;
+    --line: #233049;
+    --accent: #2dd4bf;
+    --accent-soft: #113a39;
+    --accent-ink: #5eead4;
+    --on-accent: #042321;
+    --pos: #4ade80;
+    --neg: #fb7185;
+    --warn: #fbbf24;
+    --shadow: none;
+  }
+}
+
+/* Forma (todas las estéticas) */
+:root {
+  --radius: 28px;
+  --r-ctl: 999px;
+  --r-field: 16px;
+  --r-btn: 999px;
+  --r-sm: 14px;
+  --r-icon: 50%;
+  --r-sheet: 30px;
+  --font: ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, 'Nunito', 'Segoe UI', Roboto, sans-serif;
+}
+
+.top h1 {
+  font-size: 2rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+.card {
+  padding: 20px;
+}
+.rows.card {
+  padding: 6px 20px;
+}
+.card-head h2,
+.subhead {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.hero {
+  background: linear-gradient(150deg, var(--accent-soft), var(--surface) 70%);
+}
+.hero > .stat .stat-value {
+  font-size: 2.3rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.tx-icon {
+  width: 42px;
+  height: 42px;
+  background: color-mix(in srgb, var(--chip) 15%, var(--surface));
+}
+.rows > li + li {
+  border-top-color: color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+.month-switch {
+  padding: 4px 6px;
+}
+.month-switch .icon-btn,
+.segmented button {
+  border-radius: 999px;
+}
+.search {
+  padding: 2px 16px;
+}
+
+.chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.chip,
+.chip-select {
+  border-color: transparent;
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  font-weight: 700;
+}
+
+.field input,
+.field select,
+.field textarea {
+  border-color: transparent;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.progress {
+  height: 12px;
+}
+.bars-pair i {
+  border-radius: 999px;
+}
+
+.toast {
+  border-radius: 999px;
+}
+
+/* Barra de pestañas flotante (móvil) */
+@media (max-width: 959px) {
+  .tabbar {
+    left: 12px;
+    right: 12px;
+    bottom: calc(env(safe-area-inset-bottom) + 10px);
+    padding: 0 6px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    box-shadow: 0 12px 30px -10px rgb(15 23 42 / 0.3);
+  }
+  .tabbar button.on {
+    font-weight: 700;
+  }
+  .tabbar button.on svg {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: 999px;
+    padding: 3px 14px;
+    box-sizing: content-box;
+  }
+  .fab {
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 30px);
+    box-shadow: 0 10px 24px -6px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+}
+@media (min-width: 960px) {
+  .tabbar button {
+    border-radius: 999px;
+  }
+}
