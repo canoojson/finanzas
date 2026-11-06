@@ -8,3 +8,4 @@ muestras/
 wrangler.jsonc
 # Imágenes de Chiikawa (© Nagano / San-X): solo en local, no se redistribuyen
 public/chiikawa/
+tsconfig.tsbuildinfo
