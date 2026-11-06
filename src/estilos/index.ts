@@ -1,4 +1,5 @@
 import { STYLES, type Style } from '../../shared/styles';
+import { syncStatusBar } from '../skin';
 
 export { STYLES, type Style };
 
@@ -28,6 +29,7 @@ export function applyStyle(style: Style) {
   }
   el.textContent = CSS[`./${style}.css`] ?? '';
   document.documentElement.dataset.style = style;
+  syncStatusBar();
   try {
     localStorage.setItem(CACHE_KEY, style);
   } catch {}

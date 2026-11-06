@@ -27,16 +27,7 @@ function toHex(css: string) {
 /** Colores que se están viendo ahora (principal, tarjetas y letra), como «#p,#s,#l»,
  *  para que Personalizada parta del aspecto que había. */
 export function currentColors() {
-  const probe = document.createElement('i');
-  probe.style.display = 'none';
-  document.body.appendChild(probe);
-  const read = (v: string) => {
-    probe.style.color = `var(${v})`;
-    return toHex(getComputedStyle(probe).color);
-  };
-  const out = ['--accent', '--surface', '--text'].map(read).join(',');
-  probe.remove();
-  return out;
+  return ['--accent', '--surface', '--text'].map(tokenHex).join(',');
 }
 
 /** Aplica la estética al documento: atributo para el CSS, colores propios y color de la barra del sistema. */
@@ -55,9 +46,29 @@ export function applySkin(skin: Skin, colors: string | null) {
     ['--c-primary', '--c-secondary', '--c-text', '--c-on-primary'].forEach((p) => root.style.removeProperty(p));
     delete root.dataset.skinTone;
   }
-  const bar = skin === 'chiikawa' ? '#fde3ec' : skin === 'personalizada' ? primary : null;
-  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
-    m.dataset.original ??= m.content;
-    m.content = bar ?? m.dataset.original;
-  });
+  syncStatusBar();
+}
+
+/** Color de un token CSS (p. ej. --bg) tal como se ve ahora, en #rrggbb. */
+function tokenHex(name: string) {
+  const probe = document.createElement('i');
+  probe.style.display = 'none';
+  probe.style.color = `var(${name})`;
+  document.body.appendChild(probe);
+  const hex = toHex(getComputedStyle(probe).color);
+  probe.remove();
+  return hex;
+}
+
+let watchingScheme = false;
+
+/** Pinta la barra de estado del sistema (iPhone, Android) del color de fondo que se está
+ *  viendo, sea cual sea la estética, el estilo y el modo claro u oscuro. */
+export function syncStatusBar() {
+  const bg = tokenHex('--bg');
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => (m.content = bg));
+  if (!watchingScheme) {
+    watchingScheme = true;
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncStatusBar);
+  }
 }
