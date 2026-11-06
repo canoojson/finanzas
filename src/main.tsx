@@ -125,7 +125,7 @@ function App() {
 
   return (
     <StoreCtx.Provider value={store}>
-      <main class="page">
+      <main class={`page page-${tab}`}>
         {tab === 'resumen' && <Resumen month={month} setMonth={setMonth} go={go} />}
         {tab === 'movimientos' && <Movimientos month={month} setMonth={setMonth} />}
         {tab === 'retenciones' && <Retenciones />}
@@ -134,12 +134,21 @@ function App() {
         {tab === 'ajustes' && <Ajustes />}
       </main>
       <nav class="tabbar">
+        {/* En escritorio la barra pasa a ser un menú lateral con la marca y Ajustes. */}
+        <div class="side-brand desktop-only">
+          <img src="/icons/icon.svg" alt="" width="28" height="28" />
+          Finanzas
+        </div>
         {TABS.map(([id, label, icon]) => (
           <button class={tab === id ? 'on' : ''} aria-current={tab === id ? 'page' : undefined} onClick={() => go(id)}>
             <Deco name={id} class="deco-tab" fallback={<Icon name={icon} />} />
             <span>{label}</span>
           </button>
         ))}
+        <button class={`desktop-only side-settings ${tab === 'ajustes' ? 'on' : ''}`} aria-current={tab === 'ajustes' ? 'page' : undefined} onClick={() => go('ajustes')}>
+          <Icon name="gear" />
+          <span>Ajustes</span>
+        </button>
       </nav>
       {touring && <Tour onClose={() => setTouring(false)} />}
       {toastMsg && (

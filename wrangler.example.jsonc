@@ -32,6 +32,11 @@
     "ALLOWED_EMAILS": "tu@email.com",
     // Web Push: clave pública VAPID (la privada es el secreto VAPID_PRIVATE_JWK).
     "VAPID_PUBLIC_KEY": "<clave-publica-vapid>",
-    "VAPID_SUBJECT": "mailto:tu@email.com"
+    "VAPID_SUBJECT": "mailto:tu@email.com",
+    // Avisos cuando el uso diario del plan gratuito se acerca al límite (solo a este correo).
+    // Requiere además el secreto CF_ANALYTICS_TOKEN (token de API con «Account Analytics: Read»).
+    "ADMIN_EMAIL": "tu@email.com",
+    // Panel de Cloudflare → Workers → «ID de cuenta» (o `npx wrangler whoami`).
+    "CF_ACCOUNT_ID": "<id-de-tu-cuenta>"
   }
 }

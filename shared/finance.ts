@@ -54,6 +54,17 @@ export function todayISO(tz = 'Europe/Madrid'): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
 }
 
+/** Texto del usuario ("1.234,5", "12.50", "7") → céntimos, o null si no es válido. */
+export function parseCents(text: string): number | null {
+  let s = text.replace(/\s|€/g, '');
+  if (!s) return null;
+  if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ''); // "12.000" = doce mil
+  else s = s.replace(',', '.');
+  if (!/^-?\d+(\.\d{0,2})?$/.test(s)) return null;
+  return Math.round(Number(s) * 100);
+}
+
 /** Cuota del sistema francés (céntimos). */
 export function frenchPayment(principal: number, annualRate: number, months: number): number {
   const r = annualRate / 100 / 12;

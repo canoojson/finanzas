@@ -4,8 +4,10 @@ import { Card, Empty, Field, Header, inputValue, Money } from '../components';
 import { CategoryForm, RecurringForm } from '../forms/others';
 import { applySkin, DEFAULT_COLORS } from '../skin';
 import { useStore } from '../store';
+import { ExportarIA } from './ExportarIA';
 import { Informes } from './Informes';
 import { Notificaciones } from './Notificaciones';
+import { UsoCloudflare } from './UsoCloudflare';
 
 export function Ajustes() {
   const { boot, reload, toast, category, account, startTour } = useStore();
@@ -46,6 +48,8 @@ export function Ajustes() {
       <Notificaciones />
 
       <Informes />
+
+      <Atajo />
 
       <Card title="Recurrentes" action={<button class="link" onClick={() => setEditRec('new')}>+ Añadir</button>}>
         {boot.recurring.length ? (
@@ -102,6 +106,10 @@ export function Ajustes() {
             ))}
         </div>
       </Card>
+
+      <ExportarIA />
+
+      {boot.user.is_admin && <UsoCloudflare />}
 
       <Card title="Datos">
         <div class="stack">
@@ -197,6 +205,78 @@ function Estetica() {
           )}
           <p class="muted small">Principal: botones y fondo. Secundario: tarjetas. Letra: el texto.</p>
         </>
+      )}
+    </Card>
+  );
+}
+
+function Atajo() {
+  const { boot, reload, toast } = useStore();
+  const u = boot.user;
+  const [token, setToken] = useState<string | null>(null);
+  const url = `${location.origin}/api/atajo/pago`;
+
+  const act = async (fn: () => Promise<unknown>, msg?: string) => {
+    try {
+      await fn();
+      await reload();
+      if (msg) toast(msg);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Error');
+    }
+  };
+  const copy = (text: string) => navigator.clipboard.writeText(text).then(() => toast('Copiado'), () => toast('No se pudo copiar'));
+
+  return (
+    <Card title="Atajo de iOS (Apple Pay)">
+      <p class="muted small">
+        Apunta cada pago con Apple Pay como gasto. Va a la cuenta que tenga esa tarjeta en «Nombre en Cartera» (edita la cuenta para ponerlo: la de crédito en
+        tu tarjeta, la de débito en tu cuenta corriente); si ninguna coincide, a la cuenta de abajo. La categoría se copia del último gasto con la misma descripción.
+      </p>
+      <Field label="Cuenta por defecto">
+        <select
+          value={u.shortcut_account_id ?? ''}
+          onChange={(e) => act(() => api.put('/me', { shortcut_account_id: inputValue(e) || null }), 'Guardado')}
+        >
+          <option value="">— Elige una cuenta —</option>
+          {boot.accounts
+            .filter((a) => !a.archived)
+            .map((a) => (
+              <option value={a.id}>{a.name}</option>
+            ))}
+        </select>
+      </Field>
+      {token ? (
+        <div class="stack">
+          <p class="notes">Copia el token ahora: no se volverá a mostrar.</p>
+          <button class="btn ghost" onClick={() => copy(token)}>
+            Copiar token
+          </button>
+          <button class="btn ghost" onClick={() => copy(url)}>
+            Copiar URL
+          </button>
+          <ol class="muted small">
+            <li>Atajos → Automatización → Nueva → <strong>Transacción</strong> (elige tus tarjetas) → Ejecutar inmediatamente.</li>
+            <li>
+              Acción <strong>Obtener contenido de URL</strong> con la URL copiada, método POST, cabecera <code>Authorization</code> = <code>Bearer</code> + espacio +
+              token, y cuerpo JSON: <code>descripcion</code> = Comerciante, <code>importe</code> = Importe, <code>tarjeta</code> = Tarjeta.
+            </li>
+            <li>
+              Opcional: <strong>Mostrar notificación</strong> con el campo <code>mensaje</code> de la respuesta.
+            </li>
+          </ol>
+        </div>
+      ) : (
+        <div class="stack">
+          <button class="btn ghost" onClick={() => act(async () => setToken((await api.post<{ token: string }>('/me/atajo', {})).token))}>
+            {u.shortcut_enabled ? 'Generar un token nuevo' : 'Generar token'}
+          </button>
+          {!!u.shortcut_enabled && (
+            <button class="btn ghost danger-text" onClick={() => act(() => api.del('/me/atajo'), 'Token revocado')}>
+              Revocar token
+            </button>
+          )}
+        </div>
       )}
     </Card>
   );

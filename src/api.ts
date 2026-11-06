@@ -12,6 +12,7 @@ export interface Account {
   card_charge_day: number | null;
   card_pay_account_id: number | null;
   card_settle_from: string | null;
+  wallet_card: string | null;
 }
 export interface Category {
   id: number;
@@ -84,6 +85,9 @@ export interface Boot {
     savings_target: number | null;
     skin: Skin;
     skin_colors: string | null; // «#principal,#secundario,#letra»
+    shortcut_enabled: number;
+    shortcut_account_id: number | null;
+    is_admin: boolean; // recibe los avisos de uso de Cloudflare
   };
   accounts: Account[];
   categories: Category[];
@@ -98,6 +102,13 @@ export interface Summary {
   month: string;
   byCategory: { category_id: number | null; kind: 'gasto' | 'ingreso'; total: number; count: number }[];
   series: { month: string; kind: 'gasto' | 'ingreso'; total: number }[];
+}
+
+export interface CloudflareUsage {
+  configured: boolean;
+  levels: number[];
+  day?: string;
+  metrics?: Record<string, { used: number; max: number; label: string; pct: number }>;
 }
 
 export interface Forecast {
@@ -138,6 +149,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   }
   if (res.status === 401) sessionExpired.dispatchEvent(new Event('expired'));
   if (res.status === 204) return undefined as T;
+  // Respuestas de texto (p. ej. el Markdown para IA).
+  if (res.ok && !res.headers.get('Content-Type')?.includes('json')) return (await res.text()) as T;
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new ApiError((data as any).error ?? `Error ${res.status}`, res.status);
   return data as T;

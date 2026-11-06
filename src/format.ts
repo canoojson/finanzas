@@ -6,16 +6,7 @@ export const eur = (cents: number) => eurFmt.format(cents / 100);
 export const eurShort = (cents: number) => eurShortFmt.format(Math.round(cents / 100));
 export const signedEur = (cents: number) => (cents > 0 ? '+' : '') + eur(cents);
 
-/** Texto del usuario ("1.234,5", "12.50", "7") → céntimos, o null si no es válido. */
-export function parseCents(text: string): number | null {
-  let s = text.replace(/\s|€/g, '');
-  if (!s) return null;
-  if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
-  else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ''); // "12.000" = doce mil
-  else s = s.replace(',', '.');
-  if (!/^-?\d+(\.\d{0,2})?$/.test(s)) return null;
-  return Math.round(Number(s) * 100);
-}
+export { parseCents } from '../shared/finance';
 
 /** Céntimos → texto editable ("12,5" → "12,50"). */
 export const centsToInput = (cents: number | null | undefined) =>

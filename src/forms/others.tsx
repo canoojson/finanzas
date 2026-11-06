@@ -29,6 +29,7 @@ export function AccountForm({ account, onClose }: { account?: Account; onClose: 
   const [current, setCurrent] = useState(centsToInput(account ? account.balance * sign(account.type) : 0));
   const [color, setColor] = useState(account?.color ?? PALETTE[0]);
   const [archived, setArchived] = useState(!!account?.archived);
+  const [walletCard, setWalletCard] = useState(account?.wallet_card ?? '');
   const payAccounts = boot.accounts.filter((a) => a.type !== 'tarjeta' && !a.archived && a.id !== account?.id);
   const [cutoff, setCutoff] = useState(account?.card_cutoff_day ?? 31);
   const [chargeDay, setChargeDay] = useState(account?.card_charge_day ?? 1);
@@ -47,6 +48,7 @@ export function AccountForm({ account, onClose }: { account?: Account; onClose: 
       type,
       color,
       archived,
+      wallet_card: walletCard,
       ...(isCard ? { card_cutoff_day: cutoff, card_charge_day: chargeDay, card_pay_account_id: payId } : {}),
     };
     run(async () => {
@@ -111,6 +113,11 @@ export function AccountForm({ account, onClose }: { account?: Account; onClose: 
             }
           >
             <input inputMode="decimal" value={current} onInput={(e) => setCurrent(inputValue(e))} />
+          </Field>
+        )}
+        {type !== 'efectivo' && (
+          <Field label="Nombre en Cartera" hint="Opcional. Tal cual aparece la tarjeta en la app Cartera del iPhone: los pagos con Apple Pay que haga con ella se apuntan en esta cuenta.">
+            <input maxLength={60} value={walletCard} onInput={(e) => setWalletCard(inputValue(e))} />
           </Field>
         )}
         <ColorPicker value={color} onChange={setColor} />

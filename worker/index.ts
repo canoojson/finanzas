@@ -7,7 +7,10 @@ import { authenticate, type Env } from './auth';
 import { materialize, materializeAll } from './automation';
 import { runReminders, sendPush } from './notifications';
 import { generateReport, runMonthlyReports } from './report';
+import { issueToken, shortcut } from './shortcut';
 import { crud, validate, type AppEnv, type Spec } from './crud';
+import { buildAiExport } from './ai-export';
+import { checkUsage, fetchUsage, isAdmin, LEVELS, usageConfigured } from './usage';
 
 const DEFAULT_CATEGORIES: [string, 'gasto' | 'ingreso', string, string][] = [
   ['Supermercado', 'gasto', '🛒', '#4f9d69'],
@@ -82,6 +85,7 @@ const accounts = crud({
     card_cutoff_day: { type: 'int', min: 1, max: 31 },
     card_charge_day: { type: 'int', min: 1, max: 31 },
     card_pay_account_id: { type: 'ref', table: 'accounts' },
+    wallet_card: { type: 'text', max: 60 },
   },
   async before(data, { db, owner, id }) {
     const cur = id
@@ -399,7 +403,11 @@ holds.post('/:id{[0-9]+}/charge', async (c) => {
 
 const app = new Hono<AppEnv>().basePath('/api');
 
+// El atajo de iOS no pasa por Access: tiene su propia autenticación por token.
+app.route('/atajo', shortcut);
+
 app.use(async (c, next) => {
+  if (c.req.path.startsWith('/api/atajo/')) return next();
   const email = await authenticate(c.req.raw, c.env);
   if (!email) throw new HTTPException(401, { message: 'No autorizado' });
   await ensureUser(c.env.DB, email);
@@ -415,7 +423,10 @@ app.get('/bootstrap', async (c) => {
   const q = (sql: string) => db.prepare(sql).bind(owner).all();
   const [user, acc, cats, lns, rec, gls, hlds, devices] = await Promise.all([
     db
-      .prepare('SELECT email, name, reminder_days, reminder_hour, reminder_skip_if_logged, hold_alerts, tour_done, savings_target, skin, skin_colors FROM users WHERE email = ?')
+      .prepare(
+        `SELECT email, name, reminder_days, reminder_hour, reminder_skip_if_logged, hold_alerts, tour_done, savings_target, skin, skin_colors,
+                shortcut_token_hash IS NOT NULL AS shortcut_enabled, shortcut_account_id FROM users WHERE email = ?`,
+      )
       .bind(owner)
       .first(),
     accountsWithBalance(db, owner, today),
@@ -430,7 +441,7 @@ app.get('/bootstrap', async (c) => {
   ]);
   return c.json({
     today,
-    user,
+    user: { ...user, is_admin: isAdmin(c.env, owner) },
     accounts: acc.results,
     categories: cats.results,
     loans: lns.results,
@@ -461,6 +472,7 @@ app.put('/me', async (c) => {
       savings_target: { type: 'int', min: 0 },
       skin: { type: 'enum', values: ['clasica', 'chiikawa', 'personalizada'] },
       skin_colors: { type: 'text', max: 23 },
+      shortcut_account_id: { type: 'ref', table: 'accounts' },
     },
     true,
   );
@@ -471,6 +483,13 @@ app.put('/me', async (c) => {
       .bind(...Object.values(data), c.var.email)
       .run();
   return c.json({ ok: true });
+});
+
+// Token del atajo de iOS: se muestra una sola vez; volver a generarlo invalida el anterior.
+app.post('/me/atajo', async (c) => c.json({ token: await issueToken(c.env.DB, c.var.email) }, 201));
+app.delete('/me/atajo', async (c) => {
+  await c.env.DB.prepare('UPDATE users SET shortcut_token_hash = NULL WHERE email = ?').bind(c.var.email).run();
+  return c.body(null, 204);
 });
 
 // --- Notificaciones -------------------------------------------------------------
@@ -621,6 +640,38 @@ app.get('/export', async (c) => {
   );
 });
 
+// Resumen en Markdown para pegarlo en un asistente de IA.
+app.get('/export/ia', async (c) => {
+  const months = Number(c.req.query('months') ?? 6);
+  if (!Number.isInteger(months) || months < 1 || months > 24) throw new HTTPException(400, { message: 'Periodo no válido' });
+  const md = await buildAiExport(c.env.DB, c.var.email, {
+    months,
+    movements: c.req.query('movements') === '1',
+    notes: c.req.query('notes') !== '0',
+  });
+  return c.body(md, 200, { 'Content-Type': 'text/markdown; charset=utf-8', 'Cache-Control': 'private, no-store' });
+});
+
+// --- Uso del plan gratuito (solo administrador) ---------------------------------
+
+app.get('/admin/usage', async (c) => {
+  if (!isAdmin(c.env, c.var.email)) throw new HTTPException(404, { message: 'No encontrado' });
+  if (!usageConfigured(c.env)) return c.json({ configured: false, levels: LEVELS });
+  return c.json({ configured: true, levels: LEVELS, ...(await fetchUsage(c.env)) });
+});
+
+app.post('/admin/usage/test', async (c) => {
+  if (!isAdmin(c.env, c.var.email)) throw new HTTPException(404, { message: 'No encontrado' });
+  const sent = await sendPush(c.env, c.var.email, {
+    title: '⚠️ Cloudflare: prueba de aviso de uso',
+    body: 'Así te llegará el aviso cuando el uso diario pase del 70 % o del 90 % del límite gratuito.',
+    url: '/#ajustes',
+    tag: 'usage-test',
+  });
+  if (!sent) throw new HTTPException(409, { message: 'Activa antes las notificaciones en este dispositivo' });
+  return c.json({ sent });
+});
+
 app.route('/accounts', accounts);
 app.route('/categories', categories);
 app.route('/loans', loans);
@@ -631,6 +682,9 @@ app.route('/holds', holds);
 
 app.notFound((c) => c.json({ error: 'No encontrado' }, 404));
 app.onError((err, c) => {
+  // El atajo de iOS muestra el campo «mensaje» en una notificación, también cuando falla.
+  if (err instanceof HTTPException && c.req.path.startsWith('/api/atajo/'))
+    return c.json({ error: err.message, mensaje: `No se ha apuntado: ${err.message}` }, err.status);
   if (err instanceof HTTPException) return c.json({ error: err.message }, err.status);
   if (err instanceof SyntaxError) return c.json({ error: 'JSON no válido' }, 400);
   console.error(err);
@@ -641,7 +695,7 @@ export default {
   fetch: app.fetch,
   async scheduled(_event, env, ctx) {
     // allSettled: si una tarea falla, las demás terminan igual y el fallo queda en los logs.
-    const tasks = { materializeAll: materializeAll(env.DB), runReminders: runReminders(env), runMonthlyReports: runMonthlyReports(env) };
+    const tasks = { materializeAll: materializeAll(env.DB), runReminders: runReminders(env), runMonthlyReports: runMonthlyReports(env), checkUsage: checkUsage(env) };
     ctx.waitUntil(
       Promise.allSettled(Object.values(tasks)).then((res) =>
         res.forEach((r, i) => r.status === 'rejected' && console.error('cron fallido', Object.keys(tasks)[i], r.reason)),
