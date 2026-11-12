@@ -5,7 +5,7 @@ import { forecast } from '../shared/forecast';
 import { doneByRecurring, MAX_SHIFT_DAYS, occurrences, watermark, type Override } from '../shared/recurrence';
 import { authenticate, type Env } from './auth';
 import { materialize, materializeAll } from './automation';
-import { runReminders, sendPush } from './notifications';
+import { checkBudgets, runReminders, sendPush } from './notifications';
 import { generateReport, runMonthlyReports } from './report';
 import { issueToken, shortcut } from './shortcut';
 import { crud, validate, type AppEnv, type Spec } from './crud';
@@ -134,7 +134,16 @@ const categories = crud({
     icon: { type: 'text', max: 8 },
     color: { type: 'text', max: 20 },
     archived: { type: 'bool' },
+    budget: { type: 'int', min: 1 },
   },
+  // El presupuesto solo tiene sentido en las categorías de gasto.
+  async before(data, { db, owner, id }) {
+    const kind = data.kind ?? (id ? (await db.prepare('SELECT kind FROM categories WHERE id = ? AND owner = ?').bind(id, owner).first<{ kind: string }>())?.kind : null);
+    if (kind === 'ingreso') data.budget = null;
+    // Con otro presupuesto se puede volver a avisar este mes.
+    if ('budget' in data) data.budget_alert = null;
+  },
+  after: (env, owner) => checkBudgets(env, owner),
 });
 
 const loans = crud({
@@ -222,6 +231,7 @@ recurring.post('/:id{[0-9]+}/now', async (c) => {
       .bind(owner, r.kind, data.amount ?? next.amount, data.date ?? today, r.account_id, r.category_id, r.note, r.id, next.scheduled),
     db.prepare('UPDATE recurring SET last_run = ? WHERE id = ?').bind(w, r.id),
   ]);
+  c.executionCtx.waitUntil(checkBudgets(c.env, owner).catch((e) => console.error(e)));
   return c.json({ ok: true, scheduled: next.scheduled });
 });
 
@@ -286,6 +296,7 @@ const transactions = crud({
   order: 'date DESC, id DESC',
   list: false,
   spec: txSpec,
+  after: (env, owner) => checkBudgets(env, owner),
   async before(data, { db, owner, id }) {
     const cur = id
       ? await db.prepare('SELECT kind, account_id, to_account_id FROM transactions WHERE id = ? AND owner = ?').bind(id, owner).first<any>()
@@ -429,7 +440,7 @@ app.get('/bootstrap', async (c) => {
   const [user, acc, cats, lns, rec, gls, hlds, devices] = await Promise.all([
     db
       .prepare(
-        `SELECT email, name, reminder_days, reminder_hour, reminder_skip_if_logged, hold_alerts, tour_done, news_seen, savings_target, skin, skin_colors, style,
+        `SELECT email, name, reminder_days, reminder_hour, reminder_skip_if_logged, hold_alerts, budget_alerts, tour_done, news_seen, savings_target, skin, skin_colors, style,
                 shortcut_token_hash IS NOT NULL AS shortcut_enabled, shortcut_account_id FROM users WHERE email = ?`,
       )
       .bind(owner)
@@ -481,6 +492,7 @@ app.put('/me', async (c) => {
       reminder_hour: { type: 'int', min: 0, max: 23 },
       reminder_skip_if_logged: { type: 'bool' },
       hold_alerts: { type: 'bool' },
+      budget_alerts: { type: 'bool' },
       tour_done: { type: 'bool' },
       news_seen: { type: 'int', min: 0 },
       savings_target: { type: 'int', min: 0 },
@@ -710,7 +722,8 @@ export default {
   fetch: app.fetch,
   async scheduled(_event, env, ctx) {
     // allSettled: si una tarea falla, las demás terminan igual y el fallo queda en los logs.
-    const tasks = { materializeAll: materializeAll(env.DB), runReminders: runReminders(env), runMonthlyReports: runMonthlyReports(env), checkUsage: checkUsage(env) };
+    // Los avisos de presupuesto van después de apuntar los recurrentes y cuotas del día.
+    const tasks = { materializeAll: materializeAll(env.DB).then(() => checkBudgets(env)), runReminders: runReminders(env), runMonthlyReports: runMonthlyReports(env), checkUsage: checkUsage(env) };
     ctx.waitUntil(
       Promise.allSettled(Object.values(tasks)).then((res) =>
         res.forEach((r, i) => r.status === 'rejected' && console.error('cron fallido', Object.keys(tasks)[i], r.reason)),

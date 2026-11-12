@@ -1,5 +1,5 @@
 import { buildPushHTTPRequest } from '@pushforge/builder';
-import { addDays } from '../shared/finance';
+import { addDays, BUDGET_WARN } from '../shared/finance';
 import type { Env } from './auth';
 
 export interface PushPayload {
@@ -124,5 +124,47 @@ export async function runReminders(env: Env, now = new Date()) {
         tag: 'reminder',
       });
     }
+  }
+}
+
+
+/**
+ * Avisa de las categorías que han llegado al 90 % de su presupuesto este mes (solo lo ya gastado,
+ * sin contar lo previsto). Una vez por categoría y mes. Sin `owner`, revisa a todos los usuarios.
+ */
+export async function checkBudgets(env: Env, owner?: string, now = new Date()) {
+  const db = env.DB;
+  const { date } = madridNow(now);
+  const month = date.slice(0, 7);
+  const args: string[] = [`${month}-01`, date, month];
+  if (owner) args.push(owner);
+  const { results } = await db
+    .prepare(
+      `SELECT c.id, c.owner, c.name, c.icon, c.budget,
+              COALESCE((SELECT SUM(t.amount) FROM transactions t
+                        WHERE t.category_id = c.id AND t.kind = 'gasto' AND t.date BETWEEN ?1 AND ?2), 0) AS spent
+       FROM categories c JOIN users u ON u.email = c.owner
+       WHERE c.kind = 'gasto' AND c.archived = 0 AND c.budget IS NOT NULL AND u.budget_alerts = 1
+         AND (c.budget_alert IS NULL OR c.budget_alert < ?3)${owner ? ' AND c.owner = ?4' : ''}`,
+    )
+    .bind(...args)
+    .all<{ id: number; owner: string; name: string; icon: string | null; budget: number; spent: number }>();
+
+  for (const c of results.filter((r) => r.spent >= r.budget * BUDGET_WARN)) {
+    // Se marca antes de enviar para no repetir si el cron se reintenta o coinciden dos peticiones.
+    const res = await db
+      .prepare('UPDATE categories SET budget_alert = ? WHERE id = ? AND (budget_alert IS NULL OR budget_alert < ?)')
+      .bind(month, c.id, month)
+      .run();
+    if (!res.meta.changes) continue;
+    const over = c.spent > c.budget;
+    await sendPush(env, c.owner, {
+      title: over ? `Te has pasado en ${c.name} ${c.icon ?? ''}`.trim() : `Casi sin presupuesto en ${c.name} ${c.icon ?? ''}`.trim(),
+      body: over
+        ? `Llevas ${eur(c.spent)} de ${eur(c.budget)}: ${eur(c.spent - c.budget)} por encima.`
+        : `Llevas ${eur(c.spent)} de ${eur(c.budget)}. Solo te quedan ${eur(c.budget - c.spent)} este mes.`,
+      url: '/#resumen',
+      tag: `budget-${c.id}`,
+    });
   }
 }

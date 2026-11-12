@@ -144,3 +144,6 @@ export function recurringDates(
   }
   return out;
 }
+
+/** Fracción del presupuesto a partir de la que se avisa y la barra se pone roja (al 10 % de pasarse). */
+export const BUDGET_WARN = 0.9;

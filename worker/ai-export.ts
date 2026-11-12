@@ -49,7 +49,7 @@ export async function buildAiExport(db: D1Database, owner: string, opt: AiExport
 
   const [user, cats, accounts, byMonth, recurring, loans, goals, holds, top, movs] = await Promise.all([
     db.prepare('SELECT name, savings_target FROM users WHERE email = ?').bind(owner).first<{ name: string | null; savings_target: number | null }>(),
-    q<{ id: number; name: string; kind: string }>('SELECT id, name, kind FROM categories WHERE owner = ?', owner),
+    q<{ id: number; name: string; kind: string; budget: number | null }>('SELECT id, name, kind, budget FROM categories WHERE owner = ?', owner),
     q<{ id: number; name: string; type: string; archived: number; card_cutoff_day: number | null; card_charge_day: number | null; balance: number }>(
       `SELECT a.id, a.name, a.type, a.archived, a.card_cutoff_day, a.card_charge_day, a.initial_balance
          + COALESCE((SELECT SUM(CASE kind WHEN 'ingreso' THEN amount ELSE -amount END) FROM transactions t WHERE t.account_id = a.id AND t.date <= ?1), 0)
@@ -213,6 +213,20 @@ export async function buildAiExport(db: D1Database, owner: string, opt: AiExport
       table(
         ['Categoría', `Total ${opt.months} ${opt.months === 1 ? 'mes' : 'meses'}`, 'Media mensual', '% del gasto', 'Nº movimientos', `${monthName(current)} (en curso)`],
         expCats.map((c) => [c.name, eur(c.total), eur(c.avg), pct(c.share), c.count, eur(c.now)]),
+      ),
+    );
+  }
+  const budgeted = cats.filter((c) => c.kind === 'gasto' && c.budget);
+  if (budgeted.length) {
+    h('## Presupuestos mensuales por categoría');
+    out.push(
+      table(
+        ['Categoría', 'Presupuesto', 'Media mensual gastada', `${monthName(current)} (en curso)`, 'Queda este mes'],
+        budgeted.map((c) => {
+          const spent = expCats.find((e) => e.name === c.name);
+          const now = spent?.now ?? 0;
+          return [c.name, eur(c.budget!), eur(spent?.avg ?? 0), eur(now), eur(c.budget! - now)];
+        }),
       ),
     );
   }

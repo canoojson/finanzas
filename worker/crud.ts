@@ -82,10 +82,12 @@ interface CrudOptions {
   list?: boolean;
   /** Ajustes y comprobaciones extra antes de guardar. */
   before?: (data: Record<string, any>, ctx: { db: D1Database; owner: string; id?: number }) => Promise<void> | void;
+  /** Tarea en segundo plano tras crear o editar (no retrasa la respuesta). */
+  after?: (env: Env, owner: string) => Promise<unknown>;
 }
 
 /** Rutas REST básicas (listar, crear, editar, borrar) limitadas al usuario actual. */
-export function crud({ table, spec, order, list = true, before }: CrudOptions) {
+export function crud({ table, spec, order, list = true, before, after }: CrudOptions) {
   const app = new Hono<AppEnv>();
 
   if (list) app.get('/', async (c) => {
@@ -106,6 +108,7 @@ export function crud({ table, spec, order, list = true, before }: CrudOptions) {
       )
       .bind(c.var.email, ...Object.values(data))
       .first();
+    if (after) c.executionCtx.waitUntil(after(c.env, c.var.email).catch((e) => console.error(e)));
     return c.json(row, 201);
   });
 
@@ -121,6 +124,7 @@ export function crud({ table, spec, order, list = true, before }: CrudOptions) {
       .bind(...Object.values(data), id, c.var.email)
       .first();
     if (!row) throw new HTTPException(404, { message: 'No encontrado' });
+    if (after) c.executionCtx.waitUntil(after(c.env, c.var.email).catch((e) => console.error(e)));
     return c.json(row);
   });
 

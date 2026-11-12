@@ -107,6 +107,12 @@ export function Notificaciones() {
           checked={!!u.hold_alerts}
           onChange={(v) => save({ hold_alerts: v })}
         />
+        <Toggle
+          label="Avisar de presupuestos"
+          hint="Cuando lleves gastado el 90 % del presupuesto de una categoría (una vez al mes por categoría)."
+          checked={!!u.budget_alerts}
+          onChange={(v) => save({ budget_alerts: v })}
+        />
       </div>
       {!days.length && <p class="muted small">Sin días marcados, el recordatorio está desactivado.</p>}
     </Card>

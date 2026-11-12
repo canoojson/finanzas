@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { parseCents, todayISO } from '../shared/finance';
 import type { AppEnv } from './crud';
+import { checkBudgets } from './notifications';
 
 // Atajo de iOS (automatización «Transacción» de Wallet): apunta cada pago con Apple Pay.
 // Va fuera de Cloudflare Access (aplicación «bypass» solo para /api/atajo/*), así que se
@@ -84,6 +85,7 @@ shortcut.post('/pago', async (c) => {
     .prepare('INSERT INTO transactions (owner, kind, amount, date, account_id, category_id, note) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id')
     .bind(owner, kind, Math.abs(cents), date, account.id, prev?.category_id ?? null, note)
     .first<{ id: number }>();
+  c.executionCtx.waitUntil(checkBudgets(c.env, owner).catch((e) => console.error(e)));
 
   return c.json(
     { ok: true, id: row!.id, mensaje: `Apuntado: ${eurFmt.format(Math.abs(cents) / 100)} · ${note} · ${account.name}` },

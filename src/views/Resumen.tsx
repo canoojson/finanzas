@@ -6,6 +6,7 @@ import { eur, monthLabel, shiftMonth } from '../format';
 import { useStore } from '../store';
 import { CobrosPendientes } from './CobrosPendientes';
 import { ForecastList, monthForecast, plus30 } from './Prevision';
+import { BudgetAlert, Presupuestos } from './Presupuestos';
 
 export function Resumen({ month, setMonth, go }: { month: string; setMonth: (m: string) => void; go: (tab: string) => void }) {
   const { boot, category } = useStore();
@@ -77,6 +78,8 @@ export function Resumen({ month, setMonth, go }: { month: string; setMonth: (m: 
       <Header title={boot.user.name ? `Hola, ${boot.user.name}` : 'Resumen'}>
         <MonthSwitcher month={month} onChange={setMonth} />
       </Header>
+
+      {isCurrent && <BudgetAlert summary={summary} go={() => document.querySelector('[data-tour="presupuestos"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />}
 
       {isCurrent && fc && <CobrosPendientes items={fc.items} />}
 
@@ -165,6 +168,8 @@ export function Resumen({ month, setMonth, go }: { month: string; setMonth: (m: 
           {plan.items.length ? <ForecastList items={plan.items} /> : <Empty>Nada previsto este mes todavía.</Empty>}
         </Card>
       )}
+
+      <Presupuestos month={month} summary={summary} forecast={fc?.items ?? null} />
 
       {(!isFuture || expenses.length > 0) && (
       <Card title="Gasto por categoría">

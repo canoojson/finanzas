@@ -24,15 +24,26 @@ const ESTETICA: Step = {
 
 /** Versión de las novedades. Súbela y cambia NOVEDADES para enseñar algo nuevo a quien
  *  ya usaba la app (los usuarios nuevos ven el tour completo y quedan al día). */
-export const NEWS_VERSION = 1;
+export const NEWS_VERSION = 2;
 export type TourMode = 'completo' | 'novedades';
+
+const PRESUPUESTOS: Step = {
+  tab: 'resumen',
+  target: '[data-tour="presupuestos"]',
+  title: 'Presupuestos 🎯',
+  body: (
+    <>
+      Ponte un <strong>límite al mes</strong> en las categorías que quieras controlar (restaurantes, compras…). Verás lo que llevas gastado, lo que ya está previsto (recibos y cuotas) y cuánto te queda. La rayita marca lo que llevas de mes: si la barra la pasa, vas gastando demasiado rápido.
+    </>
+  ),
+};
 
 const NOVEDADES: Step[] = [
   {
-    title: 'Novedad: estilos ✨',
-    body: 'Ahora puedes cambiar el aspecto de la app. Te enseño dónde.',
+    title: 'Novedad: presupuestos ✨',
+    body: 'Ahora puedes ponerte un presupuesto mensual por categoría. Te enseño dónde.',
   },
-  ESTETICA,
+  PRESUPUESTOS,
 ];
 
 const STEPS: Step[] = [
@@ -59,6 +70,7 @@ const STEPS: Step[] = [
     title: 'Cómo va el mes',
     body: 'Arriba, lo que te quedará cuando se paguen los cargos pendientes del mes, y lo que ha entrado y salido. Más abajo: lo que queda por entrar y salir, el gasto por categoría, la evolución del año, tu patrimonio y los cargos de los próximos 30 días.',
   },
+  PRESUPUESTOS,
   {
     tab: 'resumen',
     title: 'Pendiente de cobrar',

@@ -21,6 +21,7 @@ export interface Category {
   icon: string | null;
   color: string | null;
   archived: number;
+  budget: number | null; // presupuesto mensual en céntimos (solo gastos)
 }
 export interface Transaction {
   id: number;
@@ -82,6 +83,7 @@ export interface Boot {
     reminder_hour: number;
     reminder_skip_if_logged: number;
     hold_alerts: number;
+    budget_alerts: number; // notificación al llegar al 90 % de un presupuesto
     tour_done: number;
     news_seen: number; // última versión de novedades vista (ver NEWS_VERSION en Tour.tsx)
     savings_target: number | null;

@@ -544,6 +544,89 @@ h3 {
   transition: width 0.4s ease;
 }
 
+/* --- Presupuestos --------------------------------------------------------------- */
+
+.budget-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.budget-alert {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: color-mix(in srgb, var(--neg) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--neg) 45%, transparent);
+  border-radius: var(--r-ctl);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+.budget-alert strong {
+  display: block;
+  color: var(--neg);
+  margin-bottom: 2px;
+}
+.budget-alert-line {
+  display: block;
+  font-size: 0.88rem;
+}
+.budget-bar {
+  position: relative;
+  display: flex;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  margin: 10px 0;
+}
+.budget-bar > div {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+.budget-bar > div:first-child {
+  border-radius: 999px 0 0 999px;
+}
+.budget-bar > div:last-of-type {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+.budget-spent {
+  background: var(--accent);
+}
+.budget-planned {
+  background: repeating-linear-gradient(-45deg, var(--seg), var(--seg) 3px, transparent 3px, transparent 6px);
+  opacity: 0.55;
+}
+.budget-bar.ahead .budget-spent {
+  background: var(--warn) !important;
+}
+.budget-bar.over .budget-spent {
+  background: var(--neg);
+}
+.budget-bar.over .budget-planned {
+  --seg: var(--neg) !important;
+}
+.budget-bar i {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text);
+  opacity: 0.45;
+}
+.budget-bar i.budget-limit {
+  opacity: 0.8;
+}
+
 /* --- Financiaciones y objetivos ------------------------------------------------- */
 
 .loan,
